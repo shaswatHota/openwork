@@ -28,6 +28,7 @@ type SyncEntry = {
   dispose: () => void;
   trackedSessionRefs: Map<string, number>;
   pendingDeltas: Map<string, { messageId: string; reasoning: boolean; text: string }>;
+  partKinds: Map<string, Part["type"]>;
   // Coalesce rapid-fire delta events from the SSE stream into one cache
   // commit per animation frame. Without this, a long response produces a
   // setQueryData per token; each triggers a full transcript re-render
@@ -366,6 +367,7 @@ function applyEvent(entry: SyncEntry, workspaceId: string, event: OpencodeEvent)
     const part = props.part;
     if (!part?.sessionID || !part.messageID) return;
     if (!isTrackedSession(entry, part.sessionID)) return;
+    entry.partKinds.set(part.id, part.type);
     const mapped = toUIPart(part);
     if (!mapped) return;
     const pending = entry.pendingDeltas.get(part.id);
@@ -400,11 +402,13 @@ function applyEvent(entry: SyncEntry, workspaceId: string, event: OpencodeEvent)
     if (!isTrackedSession(entry, props.sessionID)) return;
     // Buffer this delta and let the frame flusher apply all queued deltas
     // for this entry in a single setQueryData call per affected session.
+    const knownPartKind = entry.partKinds.get(props.partID);
+    const isReasoningDelta = props.field === "reasoning" || knownPartKind === "reasoning";
     entry.deltaFlushBuffer.push({
       sessionId: props.sessionID!,
       messageId: props.messageID!,
       partId: props.partID!,
-      reasoning: props.field === "reasoning",
+      reasoning: isReasoningDelta,
       delta: props.delta!,
     });
     scheduleDeltaFlush(entry, workspaceId);
@@ -547,6 +551,7 @@ export function ensureWorkspaceSessionSync(input: SyncOptions) {
     dispose: () => {},
     trackedSessionRefs: new Map(),
     pendingDeltas: new Map(),
+    partKinds: new Map(),
     deltaFlushBuffer: [],
     deltaFlushScheduled: false,
   });

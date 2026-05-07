@@ -1403,6 +1403,7 @@ export function SessionRoute() {
       opencodeBaseUrl,
       openworkToken: token,
       developerMode: false,
+      showThinking: local.prefs.showThinking,
       modelLabel,
       onModelClick: () => {
         setModelPickerQuery("");
