@@ -430,6 +430,13 @@ function applyEvent(entry: SyncEntry, workspaceId: string, event: OpencodeEvent)
     // `message.part.updated`. The flusher resolves the kind at apply
     // time, falling back to `pendingDeltas` if the part hasn't been
     // declared yet.
+
+
+    // Buffer incoming deltas instead of applying each one immediately.
+    // The frame flusher later batches all queued updates for this entry
+    // and applies them in a single `setQueryData` call per session.
+    // This avoids multiple rapid cache writes and ensures updates are
+    // applied consistently once the full part/type context is available.
     const knownPartKind = entry.partKinds.get(props.partID);
     const isReasoningDelta = props.field === "reasoning" || knownPartKind === "reasoning";
     entry.deltaFlushBuffer.push({
