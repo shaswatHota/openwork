@@ -380,8 +380,7 @@ function applyEvent(entry: SyncEntry, workspaceId: string, event: OpencodeEvent)
     // Both `pending.text` and `mapped.text` are cumulative views of the
     // same stream, so we keep whichever is longer instead of
     // concatenating (concatenation double-counts the bytes that landed
-    // in both). Without this, reasoning text shows up duplicated in the
-    // streaming UI.
+    // in both). Without this, reasoning text shows up duplicated in the streaming UI.
     const seededPart =
       pending && (mapped.type === "text" || mapped.type === "reasoning")
         ? {
